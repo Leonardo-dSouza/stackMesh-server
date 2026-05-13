@@ -12,7 +12,7 @@
     "baseUrl": "./",
     "outDir": "./dist",
     "incremental": true,
-    "rootDir": "./src",
+    "rootDir": "./",
     "skipLibCheck": true,
     "strictNullChecks": false,
     "strictFunctionTypes": false,
