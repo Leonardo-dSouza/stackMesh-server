@@ -12,6 +12,7 @@ export class S3Service {
       credentials: {
         accessKeyId: process.env.AWS_ACCESS_KEY_ID,
         secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+        sessionToken: process.env.AWS_SESSION_TOKEN,
       },
     });
   }
@@ -25,7 +26,6 @@ export class S3Service {
       Bucket: process.env.AWS_S3_BUCKET,
       Key: s3Key,
       ContentType: mimeType,
-      ContentLength: Number(sizeBytes),
     });
 
     const url = await getSignedUrl(this.s3Client, command, {
