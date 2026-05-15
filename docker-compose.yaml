@@ -1,0 +1,41 @@
+version: '3.9' # versão do schema do compose
+
+services:
+  # Backend instance 1
+  backend-1:
+    image: stackmesh-server:test
+    restart: unless-stopped
+    env_file:
+      - .env # carrega variáveis de ambiente do arquivo .env
+    environment:
+      INSTANCE_ID: backend-1
+      # DATABASE_URL e AWS_S3_ENDPOINT virão do .env
+    ports:
+      - "5001:5000" # mapeia porta host 5001 → container 5000
+
+  # Backend instance 2
+  backend-2:
+    image: stackmesh-server:test
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      INSTANCE_ID: backend-2
+    ports:
+      - "5002:5000"
+
+  # Backend instance 3
+  backend-3:
+    image: stackmesh-server:test
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      INSTANCE_ID: backend-3
+    ports:
+      - "5003:5000"
+
+# Networks (opcional — Compose cria uma rede por padrão)
+networks:
+  default:
+    name: stackmesh-net
