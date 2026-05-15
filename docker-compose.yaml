@@ -1,5 +1,3 @@
-version: '3.9' # versão do schema do compose
-
 services:
   # Backend instance 1
   backend-1:
