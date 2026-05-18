@@ -1,7 +1,7 @@
 services:
   # Backend instance 1
   backend-1:
-    image: stackmesh-server:test
+    image: deekays/stackmesh-server:v1
     restart: unless-stopped
     env_file:
       - .env # carrega variáveis de ambiente do arquivo .env
@@ -13,7 +13,7 @@ services:
 
   # Backend instance 2
   backend-2:
-    image: stackmesh-server:test
+    image: deekays/stackmesh-server:v1
     restart: unless-stopped
     env_file:
       - .env
@@ -24,7 +24,7 @@ services:
 
   # Backend instance 3
   backend-3:
-    image: stackmesh-server:test
+    image: deekays/stackmesh-server:v1
     restart: unless-stopped
     env_file:
       - .env
