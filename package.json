@@ -1,7 +1,7 @@
 {
-  "name": "cloudvault-backend",
+  "name": "stackmesh-backend",
   "version": "1.0.0",
-  "description": "CloudVault backend - file storage application with NestJS, Prisma, and AWS S3",
+  "description": "StackMesh backend - file storage application with NestJS, Prisma, and AWS S3",
   "author": "",
   "private": true,
   "license": "UNLICENSED",

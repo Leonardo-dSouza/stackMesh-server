@@ -1,6 +1,6 @@
-# CloudVault Backend
+# StackMesh Backend
 
-NestJS + Prisma + PostgreSQL backend for CloudVault, a file storage application with nested folder organization and AWS S3 integration.
+NestJS + Prisma + PostgreSQL backend for StackMesh, a file storage application with nested folder organization and AWS S3 integration.
 
 ## Quick Start
 
