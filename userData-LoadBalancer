@@ -1,0 +1,53 @@
+#!/bin/bash
+
+# Atualiza os pacotes e instala o Nginx
+apt-get update -y
+apt-get install -y nginx
+
+# Remove o default.conf que vem com o Nginx
+rm -f /etc/nginx/sites-enabled/default
+rm -f /etc/nginx/conf.d/default.conf
+
+# Cria o arquivo de configuração do load balancer
+cat > /etc/nginx/conf.d/load_balancer.conf << 'EOF'
+upstream backend {
+    # Round-robin entre os 3 containers do backend
+    # Troca IP_EC2_BACKEND pelo IP privado da EC2 do backend
+    server IP_EC2_BACKEND:5001;
+    server IP_EC2_BACKEND:5002;
+    server IP_EC2_BACKEND:5003;
+}
+
+server {
+    # Porta que o proxy reverso vai bater
+    listen 8080;
+
+    location / {
+        # Distribui as requisições entre os servidores do upstream
+        proxy_pass http://backend;
+
+        # Preserva o host original da requisição
+        proxy_set_header Host $host;
+
+        # Passa o IP real do cliente
+        proxy_set_header X-Real-IP $remote_addr;
+
+        # Histórico de proxies que a requisição passou
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+
+        # Timeouts
+        proxy_connect_timeout 5s;
+        proxy_send_timeout 30s;
+        proxy_read_timeout 30s;
+    }
+}
+EOF
+
+# Testa a configuração do Nginx
+nginx -t
+
+# Habilita o Nginx para iniciar automaticamente com a EC2
+systemctl enable nginx
+
+# Inicia o Nginx
+systemctl start nginx
