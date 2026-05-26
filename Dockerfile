@@ -8,7 +8,7 @@ WORKDIR /app
 # Relembrando que COPY contem 2 argumentos: o primeiro é o caminho do arquivo ou diretório de origem (no host) e o segundo é o caminho de destino dentro do contêiner. 
 COPY package*.json ./
 
-# Instala as dependências do projeto utilizando o npm. O comando RUN é utilizado para executar comandos no processo de construção da imagem. Neste caso, ele executa "npm install" para instalar as dependências listadas no package.json, garantindo que a aplicação tenha tudo o que precisa para rodar corretamente.
+# Instala as dependências do projeto utilizando o npm. O comando RUN é utilizado para executar comandos no processo de construção da imagem. Neste caso, ele executa "npm ci", que é uma forma mais rápida e confiável de instalar as dependências do projeto, garantindo que as versões exatas especificadas no package-lock.json sejam instaladas.
 RUN npm ci
 
 # Após instalar as dependências, o comando COPY é utilizado novamente para copiar todo o restante dos arquivos do projeto (representado por ".") para o diretório de trabalho no contêiner (/app). Isso inclui o código-fonte da aplicação e quaisquer outros arquivos necessários para a execução.
