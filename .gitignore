@@ -4,6 +4,11 @@
 /build
 /tmp
 
+# Certs and permissions
+/leo
+leo
+
+
 # Logs
 logs
 *.log

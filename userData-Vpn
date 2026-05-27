@@ -1,0 +1,94 @@
+#!/bin/bash
+exec > /var/log/vpn-setup.log 2>&1
+
+# 1. ATUALIZA E INSTALA
+apt-get update -y
+apt-get install -y openvpn easy-rsa
+
+# 2. INICIALIZA O EASYRSA
+make-cadir /etc/openvpn/easy-rsa
+cd /etc/openvpn/easy-rsa
+
+cat > vars << 'EOF'
+set_var EASYRSA_REQ_COUNTRY     "BR"
+set_var EASYRSA_REQ_PROVINCE    "SaoPaulo"
+set_var EASYRSA_REQ_CITY        "SaoPaulo"
+set_var EASYRSA_REQ_ORG         "StackMesh"
+set_var EASYRSA_REQ_EMAIL       "admin@stackmesh.com"
+set_var EASYRSA_REQ_OU          "TI"
+set_var EASYRSA_CA_EXPIRE       3650
+set_var EASYRSA_CERT_EXPIRE     825
+EOF
+
+# 3. INICIALIZA A PKI
+./easyrsa init-pki
+
+# 4. CRIA A CA
+./easyrsa --batch --req-cn="StackMesh-CA" build-ca nopass
+
+# 5. CRIA O CERTIFICADO DO SERVIDOR
+./easyrsa --batch gen-req server nopass
+./easyrsa --batch sign-req server server
+
+# 6. GERA OS PARÂMETROS DIFFIE-HELLMAN
+./easyrsa gen-dh
+
+# 7. COPIA OS ARQUIVOS
+cp pki/ca.crt            /etc/openvpn/
+cp pki/issued/server.crt /etc/openvpn/
+cp pki/private/server.key /etc/openvpn/
+cp pki/dh.pem            /etc/openvpn/
+
+# 8. CRIA O server.conf
+cat > /etc/openvpn/server.conf << 'EOF'
+port 1194
+proto udp
+dev tun
+
+ca   /etc/openvpn/ca.crt
+cert /etc/openvpn/server.crt
+key  /etc/openvpn/server.key
+dh   /etc/openvpn/dh.pem
+
+server 10.8.0.0 255.255.255.0
+ifconfig-pool-persist /etc/openvpn/ipp.txt
+
+# roteia rede VPN e rede interna da VPC pelo túnel
+push "route 10.8.0.0 255.255.255.0"
+push "route 172.31.0.0 255.255.0.0"
+
+push "dhcp-option DNS 8.8.8.8"
+push "dhcp-option DNS 8.8.4.4"
+
+keepalive 10 120
+persist-key
+persist-tun
+verb 3
+user nobody
+group nogroup
+
+# ip forwarding e NAT para rotear tráfego dos clientes para a VPC
+script-security 2
+up /etc/openvpn/up.sh
+EOF
+
+# 9. CRIA O SCRIPT DE IP FORWARDING E NAT
+cat > /etc/openvpn/up.sh << 'EOF'
+#!/bin/bash
+# habilita ip forwarding
+sysctl -w net.ipv4.ip_forward=1
+
+# NAT — tráfego da rede VPN sai com o IP da EC2 da VPN
+# ens5 é a interface de rede padrão nas instâncias AWS modernas
+iptables -t nat -A POSTROUTING -s 10.8.0.0/24 -o ens5 -j MASQUERADE
+EOF
+
+chmod +x /etc/openvpn/up.sh
+
+# garante ip forwarding permanente
+echo "net.ipv4.ip_forward=1" >> /etc/sysctl.conf
+sysctl -p
+
+# 10. HABILITA E INICIA O OPENVPN
+systemctl enable openvpn@server
+systemctl start openvpn@server

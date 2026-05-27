@@ -1,0 +1,74 @@
+#!/bin/bash
+exec > /var/log/db-setup.log 2>&1
+
+# ============================================================
+# 1. ATUALIZA E INSTALA DOCKER
+# ============================================================
+apt-get update -y
+apt-get install -y docker.io docker-compose-v2
+
+# inicia e habilita o Docker
+systemctl enable docker
+systemctl start docker
+
+# ============================================================
+# 2. CRIA A PASTA DO PROJETO
+# ============================================================
+mkdir -p /home/ubuntu/stackmesh-db
+cd /home/ubuntu/stackmesh-db
+
+# ============================================================
+# 3. CRIA O docker-compose.yml
+# ============================================================
+cat > docker-compose.yml << 'EOF'
+services:
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: stackmesh-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: stackmesh
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin123@
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  minio:
+    image: minio/minio:latest
+    container_name: stackmesh-minio
+    restart: unless-stopped
+    environment:
+      MINIO_ROOT_USER: admin
+      MINIO_ROOT_PASSWORD: admin123@
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ":9001"
+
+volumes:
+  postgres_data:
+  minio_data:
+EOF
+
+# ============================================================
+# 4. SOBE OS CONTAINERS
+# ============================================================
+docker compose up -d
+
+# ============================================================
+# 5. AGUARDA O MINIO ESTAR PRONTO E CRIA O BUCKET
+# ============================================================
+sleep 30
+
+docker exec stackmesh-minio mc alias set local http://localhost:9000 admin 'admin123@'
+docker exec stackmesh-minio mc mb local/stackmesh-archives
+
+# ============================================================
+# 6. PERMISSÕES DA PASTA
+# ============================================================
+chown -R ubuntu:ubuntu /home/ubuntu/stackmesh-db
