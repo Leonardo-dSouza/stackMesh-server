@@ -1,9 +1,7 @@
 #!/bin/bash
 exec > /var/log/db-setup.log 2>&1
 
-# ============================================================
 # 1. ATUALIZA E INSTALA DOCKER
-# ============================================================
 apt-get update -y
 apt-get install -y docker.io docker-compose-v2
 
@@ -11,15 +9,11 @@ apt-get install -y docker.io docker-compose-v2
 systemctl enable docker
 systemctl start docker
 
-# ============================================================
 # 2. CRIA A PASTA DO PROJETO
-# ============================================================
 mkdir -p /home/ubuntu/stackmesh-db
 cd /home/ubuntu/stackmesh-db
 
-# ============================================================
 # 3. CRIA O docker-compose.yml
-# ============================================================
 cat > docker-compose.yml << 'EOF'
 services:
 
@@ -55,20 +49,14 @@ volumes:
   minio_data:
 EOF
 
-# ============================================================
 # 4. SOBE OS CONTAINERS
-# ============================================================
 docker compose up -d
 
-# ============================================================
 # 5. AGUARDA O MINIO ESTAR PRONTO E CRIA O BUCKET
-# ============================================================
 sleep 30
 
 docker exec stackmesh-minio mc alias set local http://localhost:9000 admin 'admin123@'
 docker exec stackmesh-minio mc mb local/stackmesh-archives
 
-# ============================================================
 # 6. PERMISSÕES DA PASTA
-# ============================================================
 chown -R ubuntu:ubuntu /home/ubuntu/stackmesh-db
